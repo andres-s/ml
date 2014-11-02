@@ -4,7 +4,12 @@ from matplotlib.pyplot as plt
 def display_imgs(imgs, n_rows, n_cols, labels=None, imshow_options=None):
     """Display images in grid.
 
-    imgs is a list of images matrices or a 3+ dimensional numpy ndarray with 
+    imgs is a list of images matrices or a 3+ dimensional numpy ndarray with
+    images indexed by first axis.
+
+    imshow_options a dict of keyword args that are passed directly to 
+    plt.imshow.
+    """
     
     for idx in range(n_rows * n_cols):
         ax = plt.subplot(n_rows, n_cols, idx)
