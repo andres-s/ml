@@ -214,3 +214,83 @@ def train(layer_sizes, features, classes, lmbda, init_thetas, max_iter=None):
     return unflatten(min_thetas, layer_sizes)
 
 
+class NeuralNetwork:
+
+    def __init__(self, layer_sizes, lmbda=0):
+        assert lmbda >= 0.
+        assert len(layer_sizes) > 1
+        self._lmbda  = lmbda
+        self._layer_sizes = layer_sizes
+        self._Thetas = self.__init_thetas()
+
+
+    # this really ought to be a static method
+    def __init_epsilons(self):
+        epsilons = []
+        for idx in range(len(self._layer_sizes) - 1):
+            epsilon = np.sqrt(6) / np.sqrt(self._layer_sizes[idx] + self._layer_sizes[idx+1])
+            epsilons.append(epsilon)
+
+        return epsilons
+
+    # this really ought to be a static method
+    def __random_matrix(self, rows, cols, epsilon):
+        return np.random.rand(rows, cols) * 2 * epsilon - epsilon
+
+
+    def __init_thetas(self):
+        epsilons = self.__init_epsilons()
+
+        num_cols = []
+        num_rows = []
+        for idx in range(len(self._layer_sizes) - 1):
+            num_cols.append(self._layer_sizes[idx] + 1)
+            num_rows.append(self._layer_sizes[idx+1])
+
+        return map(self.__random_matrix, num_rows, num_cols, epsilons)
+
+
+    # each row of data corresponds to an observation
+    # targets is a 1D array of {0, ..., num_classes}}
+    def fit(self, data, targets):
+        if type(data) is not np.ndarray:
+            data = np.array(data)
+        if type(targets) is not np.ndarray:
+            targets = np.array(targets)
+        assert data.ndim == 2
+        assert targets.ndim == 1
+        assert len(data) == len(targets)
+
+        # Turn 1D targets array into a 2D array
+        targets_2D = np.zeros((self._layer_sizes[-1], len(targets)))
+        for obs_number, label in enumerate(targets):
+            # watch out! observations go down columns here
+            targets_2D[label, obs_number] = 1
+
+        data = data.transpose()
+        def obj(Thetas_vec):
+            return calc_cost(data, targets_2D, self._lmbda,
+                             unflatten(Thetas_vec, self._layer_sizes))
+
+        def obj_grad(Thetas_vec):
+            curr_Thetas = unflatten(Thetas_vec, self._layer_sizes)
+            targets_est, As, Zs = feedforward_full(curr_Thetas, data)
+            deltas = backprop(curr_Thetas, Zs, targets_est, targets_2D)
+            grads = calc_grads(deltas, As, self._lmbda, curr_Thetas)
+
+            return flatten(grads)
+
+        f_prime = get_obj_grad(layer_sizes, features, classes, lmbda)
+        min_thetas = fmin_cg(obj, flatten(init_thetas), f_prime, maxiter=max_iter)
+        self._Thetas = min_thetas
+        return self
+
+
+    def predict(self, data):
+        Targets_est = self.decision_function(data)
+        return np.argmax(Targets_est, axis=0)  # assumes obs go down cols
+        
+
+    def decision_function(self, data):
+        X, As, Zs = feedforward_full(self._Thetas, data.transpose())
+        return X

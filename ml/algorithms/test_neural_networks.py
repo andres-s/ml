@@ -9,6 +9,7 @@ from neural_networks import calc_cost
 from neural_networks import backprop
 from neural_networks import calc_grads
 from neural_networks import approximate_grad
+from neural_networks import NeuralNetwork
 
 
 class NumpyCustomAssertions:
@@ -60,6 +61,9 @@ _Thetas = [
               [2.206011981, 2.154621951, -0.1785171128, 3.465666206, -0.7763444591],
               [-0.1716802431, -0.3535945295, 0.9245926192, 1.867739293, 0.03214243266]]),
 ]
+
+_layer_sizes = [ Theta.shape[1] - 1 for Theta in _Thetas ]
+_layer_sizes.append(_Thetas[-1].shape[0])
 
 # observations go down columns, not prepended w/ 1s
 _X = np.array([
@@ -182,6 +186,21 @@ class FeedforwardFullTestCase(ut.TestCase, NumpyCustomAssertions):
 
         self.assertArrayListClose(As, _As)
         self.assertArrayListClose(Zs, _Zs)
+        self.assertAllClose(Y_est, _Y_est)
+
+    def tearDown(self):
+        pass
+
+
+class DecisionFunctionTestCase(ut.TestCase, NumpyCustomAssertions):
+
+    def setUp(self):
+        self.neural_network = NeuralNetwork(_layer_sizes)
+        self.neural_network._Thetas = _Thetas
+
+
+    def test_feedforward_full(self):
+        Y_est = self.neural_network.decision_function(_X.transpose())
         self.assertAllClose(Y_est, _Y_est)
 
     def tearDown(self):
