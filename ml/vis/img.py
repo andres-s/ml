@@ -1,4 +1,4 @@
-from matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 def display_imgs(imgs, n_rows, n_cols, labels=None, imshow_options=None):
