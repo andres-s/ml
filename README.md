@@ -8,7 +8,7 @@ Currently has implementations for:
 * Collaborative filtering.
 
 There are unit tests, but I haven't set up a unit test runner, so they have to be run individually:
-```python
+```bash
 $ python ml/algorithms/test_neural_networks.py
 $ python ml/algorithms/collab_filter_test.py
 ```
